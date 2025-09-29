@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  model-service:
+    build:
+      context: ./model
+    ports:
+      - "1378:1378"
+    container_name: trellis-model
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - /models:/models
+      - /tmp:/tmp
+    runtime: nvidia
+    restart: unless-stopped
+    networks:
+      - trellis-network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "7860:7860"
+    container_name: trellis-frontend
+    environment:
+      - MODEL_API_URL=http://model-service:1378
+    depends_on:
+      - model-service
+    restart: unless-stopped
+    networks:
+      - trellis-network
+
+networks:
+  trellis-network:
+    driver: bridge
